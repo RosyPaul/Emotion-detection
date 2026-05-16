@@ -128,6 +128,16 @@ def main():
             mlflow.sklearn.log_model(clf, "model")
             
             # Save model info
+            model_uri='https://dagshub.com/RosyPaul/mlops-prj1.mlflow'
+            model_version = mlflow.register_model(
+                model_uri=model_uri,
+                name="spam-classifier"
+            )
+            logger.debug(
+                'Model registered: version %s', model_version.version
+            )
+
+
             # save_model_info(run.info.run_id, "model", 'reports/experiment_info.json')
             
             # Log the metrics file to MLflow
