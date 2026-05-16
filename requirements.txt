@@ -4,4 +4,5 @@ pandas
 PyYAML
 scikit-learn
 setuptools
+mlflow
 dvc[s3]
