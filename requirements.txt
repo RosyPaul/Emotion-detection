@@ -5,4 +5,6 @@ PyYAML
 scikit-learn
 setuptools
 mlflow
+dagshub
+python-dotenv
 dvc[s3]
