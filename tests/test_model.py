@@ -25,6 +25,14 @@ class TestModelLoading(unittest.TestCase):
             cls.new_model_version = cls.get_latest_model_version(cls.new_model_name)
         except RuntimeError as e:
             raise unittest.SkipTest(str(e))  # Skip all tests instead of hard ERROR
+        cls.new_model_uri = f"models:/{cls.new_model_name}/{cls.new_model_version}"
+        cls.new_model = mlflow.pyfunc.load_model(cls.new_model_uri)
+
+        cls.vectorizer = pickle.load(open("models/vectorizer.pkl", "rb"))
+        cls.holdout_data = pd.read_csv("data/processed/test_tfidf.csv")
+
+
+
     # def setUpClass(cls):
     #     # Set up DagsHub credentials for MLflow tracking
     #     dagshub_token = os.getenv("DAGSHUB_PAT")
