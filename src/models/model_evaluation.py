@@ -4,6 +4,24 @@ import pickle
 import json
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 import logging
+import mlflow
+import mlflow.sklearn   
+import dagshub
+import os
+
+from dotenv import load_dotenv
+load_dotenv()
+
+# Set up DagsHub credentials for MLflow tracking
+dagshub_token = os.getenv("DAGSHUB_PAT")
+if not dagshub_token:
+    raise EnvironmentError("DAGSHUB_PAT environment variable is not set")
+
+os.environ["MLFLOW_TRACKING_USERNAME"] = 'RosyPaul'
+os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+# Set up MLflow tracking URI
+mlflow.set_tracking_uri('https://dagshub.com/RosyPaul/mlops-prj1.mlflow')
 
 # logging configuration
 logger = logging.getLogger('model_evaluation')
@@ -83,19 +101,47 @@ def save_metrics(metrics: dict, file_path: str) -> None:
         raise
 
 def main():
-    try:
-        clf = load_model('./models/model.pkl')
-        test_data = load_data('./data/processed/test_tfidf.csv')
-        
-        X_test = test_data.iloc[:, :-1].values
-        y_test = test_data.iloc[:, -1].values
+    mlflow.set_experiment("dvc-pipeline")
+    with mlflow.start_run() as run:  # Start an MLflow run
+        try:
+            clf = load_model('./models/model.pkl')
+            test_data = load_data('./data/processed/test_tfidf.csv')  # ✅
+            
+            X_test = test_data.iloc[:, :-1].values
+            y_test = test_data.iloc[:, -1].values
 
-        metrics = evaluate_model(clf, X_test, y_test)
-        
-        save_metrics(metrics, 'reports/metrics.json')
-    except Exception as e:
-        logger.error('Failed to complete the model evaluation process: %s', e)
-        print(f"Error: {e}")
+            metrics = evaluate_model(clf, X_test, y_test)
+            
+            save_metrics(metrics, 'reports/metrics.json')
+            
+            # Log metrics to MLflow
+            for metric_name, metric_value in metrics.items():
+                mlflow.log_metric(metric_name, metric_value)
+            
+            # Log model parameters to MLflow
+            if hasattr(clf, 'get_params'):
+                params = clf.get_params()
+                for param_name, param_value in params.items():
+                    mlflow.log_param(param_name, param_value)
+            
+            # Log model to MLflow
+            mlflow.sklearn.log_model(clf, "model")
+            
+            # Save model info
+            # save_model_info(run.info.run_id, "model", 'reports/experiment_info.json')
+            
+            # Log the metrics file to MLflow
+            mlflow.log_artifact('reports/metrics.json')
+
+            # Log the model info file to MLflow
+            mlflow.log_artifact('reports/model_info.json')
+
+            # Log the evaluation errors log file to MLflow
+            mlflow.log_artifact('model_evaluation_errors.log')
+        except Exception as e:
+            logger.error('Failed to complete the model evaluation process: %s', e)
+            print(f"Error: {e}")
+
 
 if __name__ == '__main__':
     main()

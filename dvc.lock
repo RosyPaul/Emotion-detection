@@ -79,14 +79,19 @@ stages:
   model_evaluation:
     cmd: python src/models/model_evaluation.py
     deps:
+    - path: data/processed
+      hash: md5
+      md5: 332c4500f28305989c62f8b7109ac84c.dir
+      size: 4534910
+      nfiles: 2
     - path: models/model.pkl
       hash: md5
       md5: 50aba0197e012a66d1fec01737cbad38
       size: 36734
     - path: src/models/model_evaluation.py
       hash: md5
-      md5: c790ebd488e0e50840e8a2e6fdb3cdf5
-      size: 3369
+      md5: 37b239d92857736b3565bd572e159a7f
+      size: 5095
     outs:
     - path: reports/metrics.json
       hash: md5
